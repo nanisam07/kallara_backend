@@ -1,4 +1,175 @@
+import nodemailer from "nodemailer";
+
 export class NotificationService {
+  /**
+   * Send new Book Live Form Submission email
+   */
+  public static async sendIntakeSubmission(data: {
+    fullName: string;
+    country: string;
+    city: string;
+    timezone: string;
+    whatsapp: string;
+    language: string;
+    categories: string[];
+    bespokeRequest?: string;
+    gender?: string;
+    internationalSize?: string;
+    measurements?: {
+      bust?: string;
+      waist?: string;
+      shoulders?: string;
+      height?: string;
+    };
+    colorPalette?: string;
+    designStyle?: string;
+    inspirationUrl?: string;
+    deliveryDate?: string;
+    budget: string;
+    shippingNotes?: string;
+    digitalSignature: string;
+  }): Promise<void> {
+    const categoriesText = data.categories && data.categories.length > 0
+      ? data.categories.join("\n")
+      : "None";
+
+    const measurementsText = data.measurements
+      ? `Bust:\n${data.measurements.bust || "N/A"}\n\nWaist:\n${data.measurements.waist || "N/A"}\n\nShoulders:\n${data.measurements.shoulders || "N/A"}\n\nHeight:\n${data.measurements.height || "N/A"}`
+      : "Bust:\nN/A\n\nWaist:\nN/A\n\nShoulders:\nN/A\n\nHeight:\nN/A";
+
+    const submittedDateStr = new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "long",
+      timeStyle: "short",
+    });
+
+    const emailBody = `New Book Live Form Submission
+
+------------------------------------
+PERSONAL INFORMATION
+------------------------------------
+
+Full Name:
+${data.fullName}
+
+Country:
+${data.country}
+
+City:
+${data.city}
+
+Timezone:
+${data.timezone}
+
+WhatsApp Number:
+${data.whatsapp}
+
+Preferred Language:
+${data.language}
+
+------------------------------------
+SOURCING CATEGORIES
+------------------------------------
+
+${categoriesText}
+
+Bespoke Request:
+${data.bespokeRequest || "None"}
+
+------------------------------------
+APPAREL & MEASUREMENTS
+------------------------------------
+
+Gender:
+${data.gender || "N/A"}
+
+International Size:
+${data.internationalSize || "N/A"}
+
+${measurementsText}
+
+------------------------------------
+STYLE PREFERENCES
+------------------------------------
+
+Color Palette:
+${data.colorPalette || "N/A"}
+
+Design Philosophy:
+${data.designStyle || "N/A"}
+
+Inspiration URL:
+${data.inspirationUrl || "None"}
+
+------------------------------------
+DELIVERY & BUDGET
+------------------------------------
+
+Preferred Delivery Date:
+${data.deliveryDate || "N/A"}
+
+Budget Tier:
+${data.budget}
+
+Shipping Notes:
+${data.shippingNotes || "None"}
+
+------------------------------------
+AUTHORIZATION
+------------------------------------
+
+Consent:
+Accepted
+
+Digital Signature:
+${data.digitalSignature}
+
+Submitted At:
+${submittedDateStr} (IST)
+`;
+
+    console.log("Formulating Book Live submission email...");
+    console.log(emailBody);
+
+    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+    const smtpPort = parseInt(process.env.SMTP_PORT || "587");
+    const smtpUser = process.env.SMTP_USER || "";
+    const smtpPass = process.env.SMTP_PASS || "";
+    const smtpFromEmail = process.env.SMTP_FROM_EMAIL || "kallaraservices@gmail.com";
+    const smtpFromName = process.env.SMTP_FROM_NAME || "Kallara Global Concierge";
+
+    // Fallback: If credentials are not configured, print to stdout only.
+    if (!smtpUser || !smtpPass || smtpPass === "your_app_password_here" || smtpPass === "your_smtp_password_here") {
+      console.log("[EMAIL NOTIFICATION] SMTP credentials not configured. Email logged to console.");
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    const mailOptions = {
+      from: `"${smtpFromName}" <${smtpFromEmail}>`,
+      to: "kallaraservices@gmail.com",
+      subject: "🎉 New Book Live Form Submission",
+      text: emailBody,
+    };
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`Email successfully sent: ${info.messageId}`);
+    } catch (err) {
+      console.error("Failed to send email via SMTP transporter:", err);
+      throw err;
+    }
+  }
+
   /**
    * Send booking confirmation notification
    */

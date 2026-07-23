@@ -32,6 +32,12 @@ Ensure that the following environment variables are defined in your production h
 | `BCRYPT_SALT_ROUNDS` | Password hash complexity | `10` |
 | `RATE_LIMIT_WINDOW_MS` | IP request rate limit window | `900000` (15 minutes) |
 | `RATE_LIMIT_MAX` | Max requests per IP in window | `200` (increase if high traffic) |
+| `SMTP_HOST` | Hostname of the mail server | `smtp.gmail.com` |
+| `SMTP_PORT` | Port of the mail server | `587` or `465` |
+| `SMTP_USER` | Username of the mail account | `kallaraservices@gmail.com` |
+| `SMTP_PASS` | Password/App Password of the account | `xxxx xxxx xxxx xxxx` |
+| `SMTP_FROM_EMAIL` | Sender address | `kallaraservices@gmail.com` |
+| `SMTP_FROM_NAME` | Display name of sender | `Kallara Global Concierge` |
 
 ---
 
