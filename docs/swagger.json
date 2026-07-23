@@ -1,0 +1,251 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Kallara Global Sourcing Concierge Backend API",
+    "description": "API documentation for the international live sourcing platform, supporting package booking, payment flows, commission checks, fulfillments, and admin profiles.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/bookings": {
+      "post": {
+        "summary": "Create a new booking slot request",
+        "description": "Creates a pending sourcing slot booking for a customer. Automatically determines package price and issues confirmation notifications.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerName": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "example": "john@example.com" },
+                  "phone": { "type": "string", "example": "+15550199" },
+                  "country": { "type": "string", "example": "United States" },
+                  "packageType": { "type": "string", "enum": ["market-express", "premium-event"], "example": "premium-event" },
+                  "bookingDate": { "type": "string", "format": "date", "example": "2026-08-15" },
+                  "bookingTime": { "type": "string", "example": "10:00 AM EST" },
+                  "notes": { "type": "string", "example": "Prefer Banarasi silk shops" }
+                },
+                "required": ["customerName", "email", "phone", "country", "packageType", "bookingDate", "bookingTime"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Booking created successfully" },
+          "400": { "description": "Validation parameters error" }
+        }
+      },
+      "get": {
+        "summary": "List all bookings (Admin Only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of bookings returned" },
+          "401": { "description": "Unauthorized access token" }
+        }
+      }
+    },
+    "/api/bookings/{id}": {
+      "get": {
+        "summary": "Retrieve booking details by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Public Booking ID (KL-...) or database UUID" }
+        ],
+        "responses": {
+          "200": { "description": "Booking details returned" },
+          "404": { "description": "Booking not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update booking status or assignment (Admin Only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Database UUID of the booking" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paymentStatus": { "type": "string", "enum": ["PENDING", "SUCCESS", "FAILED"] },
+                  "bookingStatus": { "type": "string", "enum": ["PENDING", "CONFIRMED", "STYLIST_ASSIGNED", "SESSION_SCHEDULED", "COMPLETED", "CANCELLED"] },
+                  "assignedTo": { "type": "string", "example": "Priya Sharma" },
+                  "meetingLink": { "type": "string", "format": "url", "example": "https://meet.google.com/abc-defg-hij" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Booking updated successfully" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/payments/create-order": {
+      "post": {
+        "summary": "Create a pending payment transaction order",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bookingId": { "type": "string", "example": "KL-20260722-ABCD" }
+                },
+                "required": ["bookingId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment order generated successfully" },
+          "404": { "description": "Booking not found" }
+        }
+      }
+    },
+    "/api/payments/verify": {
+      "post": {
+        "summary": "Verify mock payment order verification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": { "type": "string", "example": "order_mock_h123abc" },
+                  "shouldSucceed": { "type": "boolean", "default": true, "example": true }
+                },
+                "required": ["orderId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment status updated and confirmed" }
+        }
+      }
+    },
+    "/api/commission/calculate": {
+      "post": {
+        "summary": "Calculate sourcing commission parameters",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "basketValue": { "type": "number", "example": 1200.00 }
+                },
+                "required": ["basketValue"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Calculated commission details returned" }
+        }
+      }
+    },
+    "/api/intakes": {
+      "post": {
+        "summary": "Submit customer styling intake profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": { "type": "string" },
+                  "country": { "type": "string" },
+                  "city": { "type": "string" },
+                  "timezone": { "type": "string" },
+                  "whatsapp": { "type": "string" },
+                  "language": { "type": "string" },
+                  "categories": { "type": "array", "items": { "type": "string" } },
+                  "budget": { "type": "string" },
+                  "digitalSignature": { "type": "string" }
+                },
+                "required": ["fullName", "country", "city", "timezone", "whatsapp", "language", "categories", "budget", "digitalSignature"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Intake profile created" }
+        }
+      }
+    },
+    "/api/fulfillments": {
+      "post": {
+        "summary": "Record fulfillment logistics and shipping dispatch (Admin Only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bookingId": { "type": "string" },
+                  "basketValue": { "type": "number" },
+                  "shippingCost": { "type": "number" },
+                  "trackingNumber": { "type": "string" },
+                  "courierName": { "type": "string" }
+                },
+                "required": ["bookingId", "basketValue", "shippingCost"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Fulfillment details saved" }
+        }
+      }
+    },
+    "/api/admin/login": {
+      "post": {
+        "summary": "Admin dashboard authenticate credentials",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "example": "admin@kallara.com" },
+                  "password": { "type": "string", "example": "admin123" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "JWT authentication token returned" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
