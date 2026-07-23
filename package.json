@@ -4,7 +4,7 @@
   "description": "Backend API for Kallara Global Sourcing Concierge",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc --project tsconfig.json",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "db:init": "ts-node src/db/migrate.ts"
